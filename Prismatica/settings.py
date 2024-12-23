@@ -74,13 +74,20 @@ WSGI_APPLICATION = 'Prismatica.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# Select the appropriate database host based on environment
+DB_HOST = config('DOCKER_DB_HOST', default=config('LOCAL_DB_HOST', default='localhost'))
+
+
+print(f"DEBUG: DB_HOST is set to {DB_HOST}")
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST', default='localhost'),
+        'HOST': DB_HOST,
         'PORT': config('DB_PORT', default='5432'),
     }
 }
