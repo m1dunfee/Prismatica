@@ -1,23 +1,27 @@
-# Base image with Python
-FROM python:3.10-slim
-# Set environment variables
-# Prevents Python from writing .pyc files
-ENV PYTHONDONTWRITEBYTECODE=1  
-# Ensures stdout/stderr are flushed
-ENV PYTHONUNBUFFERED=1         
-# Set working directory inside the container
+# syntax=docker/dockerfile:1
+FROM python:3.11-slim
+
+# 1. Install system dependencies
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      build-essential \
+      libpq-dev \
+      netcat-openbsd \
+      postgresql-client \
+ && rm -rf /var/lib/apt/lists/*
+
+# 2. Install Python dependencies
 WORKDIR /app
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-# Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-# Copy the project code into the container
+RUN pip install --upgrade pip \
+ && pip install -r requirements.txt
+
+# 3. Copy project files (including manage.py)
 COPY . .
-# Expose the port Django will run on
-EXPOSE 8000
-# Start the Django development server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# 4. Copy + permit our wait script
+COPY wait-for-postgres.sh /wait-for-postgres.sh
+RUN chmod +x /wait-for-postgres.sh
+
+# 5. Entrypoint waits for Postgres, applies migrations, then runs
+ENTRYPOINT ["/wait-for-postgres.sh"]

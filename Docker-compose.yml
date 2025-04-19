@@ -1,23 +1,33 @@
-version: '3.9'
+# version: '3.9'
+
 services:
   prismatica:
+    container_name: prismatica-app
     build:
       context: .
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    depends_on:
-      - db
     volumes:
       - .:/app
     env_file:
-      - .env  # Import environment variables from .env file
+      - .env
+    depends_on:
+      - db
+
   db:
+    container_name: prismatica-db
     image: postgres:15-alpine
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: ${DB_USER}  # Reference variables from .env
+      POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"  # Change to 5433 on the host
-    env_file:
-      - .env  # (Optional) Load the same .env file here for consistency
+      - "5432:5432"
+
+volumes:
+  postgres_data:
