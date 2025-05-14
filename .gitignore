@@ -1,0 +1,35 @@
+# .gitignore 
+
+# Ignore Python artifacts 
+
+__pycache__/ 
+
+*.py[cod] 
+
+*.so 
+
+ 
+
+# Ignore env files & credentials 
+
+.env 
+
+docker-compose.override.yml 
+
+ 
+
+# Ignore IDE/editor files 
+
+*.swp 
+
+.vscode/ 
+
+.idea/ 
+
+ 
+
+# Ignore Docker volumes 
+
+postgres_data/ 
+
+redis_data/ 

@@ -1,0 +1,237 @@
+# docker-compose.yml 
+
+version: '3.9'                                # 1) Compose file format 
+
+ 
+
+# ── 2) Network definitions ─────────────────────────────────────────────────── 
+
+networks: 
+
+  frontend_net: 
+
+    driver: bridge                           # Public‐facing network for React & WS 
+
+  backend_net: 
+
+    driver: bridge 
+
+    internal: true                           # Private API network (no host access) 
+
+  data_net: 
+
+    driver: bridge 
+
+    internal: true                           # DB network, fully locked‐down 
+
+ 
+
+# ── 3) Named volumes ───────────────────────────────────────────────────────── 
+
+volumes: 
+
+  postgres_data:                             # Persists PostgreSQL data 
+
+  redis_data:                                # Persists Redis cache 
+
+ 
+
+# ── 4) Services ────────────────────────────────────────────────────────────── 
+
+services: 
+
+ 
+
+  ### React Frontend (served by Nginx) ──────────────────────────────────────── 
+
+  frontend: 
+
+    image: nginx:latest 
+
+    volumes: 
+
+      - ./frontend/build:/usr/share/nginx/html 
+
+    ports: 
+
+      - "80:80" 
+
+    networks: 
+
+      - frontend_net 
+
+    depends_on: 
+
+      - django_auth 
+
+      - django_py_ha_api 
+
+      - django_ai 
+
+ 
+
+  ### Django Auth Sub‑App ───────────────────────────────────────────────────── 
+
+  django_auth: 
+
+    build: ./backend 
+
+    command: > 
+
+      gunicorn users.wsgi:application 
+
+      --bind 0.0.0.0:8000 
+
+    volumes: 
+
+      - ./backend:/app 
+
+    environment: 
+
+      DJANGO_SETTINGS_MODULE: prismatica.settings.auth 
+
+      SECRET_KEY: ${DJANGO_SECRET_KEY} 
+
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB} 
+
+      REDIS_URL: redis://redis:6379/0 
+
+    ports: 
+
+      - "8000:8000" 
+
+    networks: 
+
+      - frontend_net 
+
+      - backend_net 
+
+      - data_net 
+
+    depends_on: 
+
+      - postgres 
+
+      - redis 
+
+ 
+
+  ### Django WebSocket / HA API Sub‑App ─────────────────────────────────────── 
+
+  django_py_ha_api: 
+
+    build: ./backend 
+
+    command: > 
+
+      daphne py_ha_api.asgi:application 
+
+      --bind 0.0.0.0 --port 8001 
+
+    volumes: 
+
+      - ./backend:/app 
+
+    environment: 
+
+      DJANGO_SETTINGS_MODULE: prismatica.settings.py_ha_api 
+
+      SECRET_KEY: ${DJANGO_SECRET_KEY} 
+
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB} 
+
+    ports: 
+
+      - "8001:8001" 
+
+    networks: 
+
+      - frontend_net      # expose WS endpoint externally 
+
+      - backend_net      # internal API calls 
+
+    depends_on: 
+
+      - postgres 
+
+ 
+
+  ### Django AI/LLM Sub‑App ────────────────────────────────────────────────── 
+
+  django_ai: 
+
+    build: ./backend 
+
+    command: > 
+
+      uvicorn ai.asgi:app 
+
+      --host 0.0.0.0 --port 8002 
+
+    volumes: 
+
+      - ./backend:/app 
+
+    environment: 
+
+      DJANGO_SETTINGS_MODULE: prismatica.settings.ai 
+
+      SECRET_KEY: ${DJANGO_SECRET_KEY} 
+
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB} 
+
+    ports: 
+
+      - "8002:8002" 
+
+    networks: 
+
+      - backend_net 
+
+      - data_net 
+
+    depends_on: 
+
+      - redis 
+
+      - postgres 
+
+ 
+
+  ### Redis Cache ──────────────────────────────────────────────────────────── 
+
+  redis: 
+
+    image: redis:latest 
+
+    volumes: 
+
+      - redis_data:/data 
+
+    networks: 
+
+      - backend_net 
+
+ 
+
+  ### PostgreSQL Database ──────────────────────────────────────────────────── 
+
+  postgres: 
+
+    image: postgres:latest 
+
+    environment: 
+
+      POSTGRES_USER: ${POSTGRES_USER} 
+
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} 
+
+      POSTGRES_DB: ${POSTGRES_DB} 
+
+    volumes: 
+
+      - postgres_data:/var/lib/postgresql/data 
+
+    networks: 
+
+      - data_net 
