@@ -26,8 +26,9 @@ INSTALLED_APPS = [
     'channels',      # if you’re using WebSockets in this sub-app
 
     # Your own apps
-    'users',         # example “auth”-related app
-    # … any other apps you need …
+    'users',
+    'py_ha_api',
+    'ai',
 ]
 
 MIDDLEWARE = [
@@ -40,7 +41,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'prismatica.urls'  # adjust if your URL module differs
+ROOT_URLCONF = 'prismatica_backend.urls'
 
 TEMPLATES = [
     {

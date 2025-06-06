@@ -26,7 +26,7 @@ COPY . .
 
 # 7) Ensure Django’s “collectstatic” will go into a folder named /app/staticfiles
 #    (you can skip this if you’re not using collectstatic or if you’ll handle it in CI)
-RUN python manage.py collectstatic --noinput
+# RUN python manage.py collectstatic --noinput
 
 # 8) By default, run nothing—each service in docker-compose will override CMD
 CMD ["/bin/bash"]
