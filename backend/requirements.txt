@@ -1,22 +1,21 @@
-asgiref==3.8.1
-channels==4.2.2
 Django==5.2.2
 djangorestframework==3.16.0
+channels==4.2.2
+asgiref==3.8.1
 sqlparse==0.5.3
 typing_extensions==4.14.0
 tzdata==2025.2
 
-# PostgreSQL driver so Django can use your Postgres container:
+# Postgres driver
 psycopg2-binary==2.9.7
 
-# Gunicorn for the "django_auth" service:
+# dj-database-url for parsing DATABASE_URL
+dj-database-url==1.1.0
+
+# WSGI / ASGI servers
 gunicorn==20.1.0
-
-# Daphne for your WebSocket/HA API:
 daphne==4.0.0
-
-# Uvicorn (if your AI component is a FastAPI or ASGI app):
 uvicorn==0.24.0
 
-# Redis client (for Channels or any Redis-backed caching/queues):
+# Redis client
 redis==4.5.5
