@@ -1,7 +1,4 @@
 # docker-compose.yml 
-
-version: '3.9'                                # 1) Compose file format 
-
  
 
 # ── 2) Network definitions ─────────────────────────────────────────────────── 
